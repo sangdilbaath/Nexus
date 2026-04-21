@@ -19,7 +19,7 @@ def check_security():
         st.title("🔐 Nexus AI Security Gate")
         
         # In a real app, store this password securely in Streamlit Secrets!
-        APP_PASSWORD = "super_secret_password_123" 
+        APP_PASSWORD = "demo123" 
         
         user_pwd = st.text_input("Enter Application Password:", type="password")
         if st.button("Unlock"):
