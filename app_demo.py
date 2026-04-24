@@ -9,7 +9,7 @@ import io
 st.set_page_config(page_title="Nexus AI", page_icon="🚀", layout="centered")
 
 # --- 2. AI CONFIGURATION ---
-API_KEY = "AIzaSyB2KlDX_ROJ-Cb4G7xrLJtAXuZ85ibo-ho"
+API_KEY = "AIzaSyAWOkuemXUvCCxFp4GIWL9VwH6VXVXrpZQ"
 client = genai.Client(api_key=API_KEY)
 
 # --- 3. SESSION STATE (MEMORY) ---
