@@ -2,6 +2,7 @@ import streamlit as st
 from google import genai
 from google.genai import types
 import pandas as pd
+import io
 
 # --- 1. PAGE CONFIGURATION ---
 st.set_page_config(page_title="Nexus AI", page_icon="🚀", layout="centered")
@@ -58,7 +59,7 @@ if uploaded_file is not None:
         except Exception as e:
             st.error(f"❌ Error reading file: {e}")
 
-# --- 6. EXCEL PREVIEW & "SHOW MORE" LOGIC ---
+# --- 6. EXCEL PREVIEW & DOWNLOAD LOGIC ---
 if st.session_state.df is not None:
     st.subheader("📊 Live Data Preview")
     
@@ -67,10 +68,26 @@ if st.session_state.df is not None:
     else:
         st.dataframe(st.session_state.df.head(5), use_container_width=True)
         
-    button_label = "Show Less" if st.session_state.show_full_data else "Show More"
-    if st.button(button_label):
-        st.session_state.show_full_data = not st.session_state.show_full_data
-        st.rerun() 
+    # Put the buttons side-by-side for a clean mobile UI
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        button_label = "Show Less" if st.session_state.show_full_data else "Show More"
+        if st.button(button_label, use_container_width=True):
+            st.session_state.show_full_data = not st.session_state.show_full_data
+            st.rerun() 
+            
+    with col2:
+        # Convert the current DataFrame to a downloadable CSV format
+        csv = st.session_state.df.to_csv(index=False).encode('utf-8')
+        original_name = st.session_state.last_uploaded.split('.')[0] if st.session_state.last_uploaded else "data"
+        st.download_button(
+            label="💾 Download Data",
+            data=csv,
+            file_name=f"Nexus_Updated_{original_name}.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
 
 st.divider()
 
