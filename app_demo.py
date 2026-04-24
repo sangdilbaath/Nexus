@@ -7,7 +7,7 @@ import speech_recognition as sr
 st.set_page_config(page_title="Nexus AI", page_icon="🚀", layout="centered")
 
 # --- 2. AI CONFIGURATION ---
-API_KEY = "AIzaSyAWOkuemXUvCCxFp4GIWL9VwH6VXVXrpZQ"
+API_KEY = "AIzaSyBqgiDBppREFokyAp8Nc1z5Il15bwDtLwo"
 client = genai.Client(api_key=API_KEY)
 
 # --- 3. SESSION STATE (MEMORY) ---
@@ -19,6 +19,9 @@ if "show_full_data" not in st.session_state:
     st.session_state.show_full_data = False
 if "last_uploaded" not in st.session_state:
     st.session_state.last_uploaded = None
+# NEW: Tracker to prevent the infinite audio loop!
+if "last_audio" not in st.session_state:
+    st.session_state.last_audio = None 
 
 # --- 4. HEADER ---
 st.title("🚀 Nexus AI")
@@ -114,8 +117,9 @@ with col2:
     # Standard Keyboard Input
     text_prompt = st.chat_input("Command Nexus...")
 
-# Process Voice Input
-if audio_value:
+# Process Voice Input (FIXED: The Anti-Loop Check)
+if audio_value and audio_value != st.session_state.last_audio:
+    st.session_state.last_audio = audio_value  # Save this specific recording so we don't repeat it
     with st.spinner("Translating audio..."):
         r = sr.Recognizer()
         try:
