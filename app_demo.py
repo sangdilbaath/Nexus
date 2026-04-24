@@ -133,4 +133,29 @@ if audio_value and audio_value != st.session_state.last_audio:
     st.session_state.last_audio = audio_value  
     with st.spinner("Nexus is translating audio..."):
         try:
-            audio_part = types.Part
+            audio_part = types.Part.from_bytes(
+                data=audio_value.getvalue(),
+                mime_type='audio/wav' 
+            )
+            
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=[
+                    audio_part, 
+                    "You are a transcriber. Transcribe the spoken words in this audio exactly. Output ONLY the text, no markdown, no quotes."
+                ]
+            )
+            
+            transcribed_text = response.text.strip()
+            
+            if transcribed_text:
+                process_command(transcribed_text)
+            else:
+                st.error("❌ Audio was silent. Please check your mic permissions.")
+                
+        except Exception as e:
+            st.error(f"❌ Gemini Audio Error: {e}")
+
+# Process Keyboard Input
+if text_prompt:
+    process_command(text_prompt)
