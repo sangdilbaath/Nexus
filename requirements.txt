@@ -2,5 +2,4 @@ streamlit
 pandas
 google-genai
 SpeechRecognition
-gTTS
 openpyxl
