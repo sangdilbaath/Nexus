@@ -117,7 +117,7 @@ def process_command(user_text):
                 
                 clean_code = response.text.strip().replace("```python", "").replace("```", "").strip()
                 
-                local_context = {'df': st.session_state.df.copy(), 'pd': pd}
+               local_context = {'df': st.session_state.df.copy(), 'pd': pd, 'st': st}
                 exec(clean_code, {}, local_context)
                 
                 st.session_state.df = local_context['df']
