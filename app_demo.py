@@ -96,6 +96,7 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
+
 # --- 8. THE ENTERPRISE BRAIN (PROCESS LOGIC) ---
 def process_command(user_text):
     st.session_state.messages.append({"role": "user", "content": user_text})
@@ -104,37 +105,43 @@ def process_command(user_text):
         message_placeholder = st.empty()
         try:
             if st.session_state.df is not None:
-                message_placeholder.markdown("⚙️ *Analyzing dataset and executing logic...*")
+                message_placeholder.markdown("⚙️ *Analyzing dataset and visualizing...*")
+                
                 system_prompt = f"""
                 You are a Python Data Analyst. The user has a Pandas DataFrame named 'df'.
                 Current Columns: {list(st.session_state.df.columns)}
                 Task: {user_text}
+                
                 CRITICAL RULES:
-                1. Return ONLY valid Python code. No markdown formatting, no backticks, no explanations.
-                2. Modify 'df' directly in place.
+                1. Return ONLY valid Python code. No markdown, no backticks.
+                2. To show charts, use 'st.bar_chart(df_to_plot)', 'st.line_chart()', or 'st.area_chart()'.
+                3. If modifying data, modify 'df' directly.
                 """
+                
                 response = client.models.generate_content(model="gemini-2.5-flash-lite", contents=system_prompt)
                 
                 clean_code = response.text.strip().replace("```python", "").replace("```", "").strip()
                 
+                # We execute the code HERE. If there is a chart, it will appear in the chat!
                 local_context = {'df': st.session_state.df.copy(), 'pd': pd, 'st': st}
                 exec(clean_code, {}, local_context)
                 
+                # Update the background data
                 st.session_state.df = local_context['df']
-                reply = "Command executed successfully. I have updated the data table."
+                
+                # We REMOVED st.rerun() so the graph stays visible!
+                message_placeholder.markdown("✅ Logic executed. Chart/Result displayed below:")
+                st.session_state.messages.append({"role": "assistant", "content": "I have processed your request and rendered the results below."})
+            
             else:
-                message_placeholder.markdown("✨ *Thinking...*")
+                # Normal chat if no data is uploaded
                 response = client.models.generate_content(model="gemini-2.5-flash-lite", contents=user_text)
                 reply = response.text
-                
-            st.session_state.messages.append({"role": "assistant", "content": reply})
-            st.rerun()
+                message_placeholder.markdown(reply)
+                st.session_state.messages.append({"role": "assistant", "content": reply})
             
         except Exception as e:
-            error_msg = f"System Error: Logic failed. ({e})"
-            st.session_state.messages.append({"role": "assistant", "content": error_msg})
-            st.rerun()
-
+            st.error(f"Logic failed: {e}")
 # --- 9. DUAL INPUT: KEYBOARD OR VOICE ---
 st.caption("🗣️ Speak to Nexus or type below:")
 col1, col2 = st.columns([1, 5])
