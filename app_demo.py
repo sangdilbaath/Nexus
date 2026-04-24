@@ -1,14 +1,28 @@
 import streamlit as st
 from google import genai
+from google.genai import types
 import pandas as pd
-import speech_recognition as sr
 
 # --- 1. PAGE CONFIGURATION ---
 st.set_page_config(page_title="Nexus AI", page_icon="🚀", layout="centered")
 
-# --- 2. AI CONFIGURATION ---
-API_KEY = "AIzaSyBqgiDBppREFokyAp8Nc1z5Il15bwDtLwo"
-client = genai.Client(api_key=API_KEY)
+# --- 2. API KEY CONFIGURATION (SECURE USER INPUT) ---
+with st.sidebar:
+    st.title("⚙️ Settings")
+    st.caption("Securely connect your AI brain.")
+    user_api_key = st.text_input("Gemini API Key", type="password", placeholder="Paste your key here...")
+    st.markdown("[Get your free API key here](https://aistudio.google.com/app/apikey)")
+    st.divider()
+    st.markdown("🔒 *Your key is never stored. It resets when you close the app.*")
+
+# Stop the app completely if the user hasn't entered a key yet
+if not user_api_key:
+    st.title("🚀 Welcome to Nexus AI")
+    st.warning("👈 Please open the sidebar menu and enter your Gemini API Key to unlock the app.")
+    st.stop()
+
+# Initialize the AI with the user's secure key
+client = genai.Client(api_key=user_api_key)
 
 # --- 3. SESSION STATE (MEMORY) ---
 if "messages" not in st.session_state:
@@ -19,7 +33,6 @@ if "show_full_data" not in st.session_state:
     st.session_state.show_full_data = False
 if "last_uploaded" not in st.session_state:
     st.session_state.last_uploaded = None
-# NEW: Tracker to prevent the infinite audio loop!
 if "last_audio" not in st.session_state:
     st.session_state.last_audio = None 
 
@@ -39,7 +52,7 @@ if uploaded_file is not None:
                 st.session_state.df = pd.read_excel(uploaded_file)
             
             st.session_state.last_uploaded = uploaded_file.name
-            welcome_msg = f"I have successfully loaded the dataset {uploaded_file.name}. How would you like to analyze it?"
+            welcome_msg = f"I have successfully loaded the dataset `{uploaded_file.name}`. How would you like to analyze it?"
             st.session_state.messages.append({"role": "assistant", "content": welcome_msg})
             st.rerun()
         except Exception as e:
@@ -110,28 +123,14 @@ st.caption("🗣️ Speak to Nexus or type below:")
 col1, col2 = st.columns([1, 5])
 
 with col1:
-    # Native Streamlit Audio Input
     audio_value = st.audio_input("Record", label_visibility="collapsed")
 
 with col2:
-    # Standard Keyboard Input
     text_prompt = st.chat_input("Command Nexus...")
 
-# Process Voice Input (FIXED: The Anti-Loop Check)
+# Process Voice Input
 if audio_value and audio_value != st.session_state.last_audio:
-    st.session_state.last_audio = audio_value  # Save this specific recording so we don't repeat it
-    with st.spinner("Translating audio..."):
-        r = sr.Recognizer()
+    st.session_state.last_audio = audio_value  
+    with st.spinner("Nexus is translating audio..."):
         try:
-            with sr.AudioFile(audio_value) as source:
-                audio_data = r.record(source)
-                transcribed_text = r.recognize_google(audio_data)
-                process_command(transcribed_text)
-        except sr.UnknownValueError:
-            st.error("❌ Audio was clear, but no speech was detected. Please try speaking closer to the mic.")
-        except Exception as e:
-            st.error(f"❌ Microphone/Processing Error: {e}")
-
-# Process Keyboard Input
-if text_prompt:
-    process_command(text_prompt)
+            audio_part = types.Part
