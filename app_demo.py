@@ -2,8 +2,6 @@ import streamlit as st
 from google import genai
 import pandas as pd
 import speech_recognition as sr
-from gtts import gTTS
-import io
 
 # --- 1. PAGE CONFIGURATION ---
 st.set_page_config(page_title="Nexus AI", page_icon="🚀", layout="centered")
@@ -22,23 +20,11 @@ if "show_full_data" not in st.session_state:
 if "last_uploaded" not in st.session_state:
     st.session_state.last_uploaded = None
 
-# --- 4. VOICE ENGINE (TEXT-TO-SPEECH) ---
-def speak_text(text):
-    try:
-        tts = gTTS(text=text, lang='en')
-        audio_fp = io.BytesIO()
-        tts.write_to_fp(audio_fp)
-        audio_fp.seek(0)
-        # autoplay=True makes the AI speak instantly when the message loads!
-        st.audio(audio_fp, format="audio/mp3", autoplay=True) 
-    except Exception as e:
-        st.warning(f"Voice engine skipped: {e}")
-
-# --- 5. HEADER ---
+# --- 4. HEADER ---
 st.title("🚀 Nexus AI")
-st.caption("Enterprise Voice & Cloud Edition")
+st.caption("Enterprise Cloud Edition")
 
-# --- 6. FILE UPLOAD LOGIC ---
+# --- 5. FILE UPLOAD LOGIC ---
 uploaded_file = st.file_uploader("Upload your Database (CSV or Excel)", type=['csv', 'xlsx'])
 
 if uploaded_file is not None:
@@ -51,12 +37,12 @@ if uploaded_file is not None:
             
             st.session_state.last_uploaded = uploaded_file.name
             welcome_msg = f"I have successfully loaded the dataset {uploaded_file.name}. How would you like to analyze it?"
-            st.session_state.messages.append({"role": "assistant", "content": welcome_msg, "speak": True})
+            st.session_state.messages.append({"role": "assistant", "content": welcome_msg})
             st.rerun()
         except Exception as e:
             st.error(f"❌ Error reading file: {e}")
 
-# --- 7. EXCEL PREVIEW & "SHOW MORE" LOGIC ---
+# --- 6. EXCEL PREVIEW & "SHOW MORE" LOGIC ---
 if st.session_state.df is not None:
     st.subheader("📊 Live Data Preview")
     
@@ -72,15 +58,12 @@ if st.session_state.df is not None:
 
 st.divider()
 
-# --- 8. CHAT HISTORY UI ---
-for idx, message in enumerate(st.session_state.messages):
+# --- 7. CHAT HISTORY UI ---
+for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
-        # Only speak the very last message if it is flagged to speak
-        if message.get("speak") and idx == len(st.session_state.messages) - 1:
-            speak_text(message["content"])
 
-# --- 9. THE ENTERPRISE BRAIN (PROCESS LOGIC) ---
+# --- 8. THE ENTERPRISE BRAIN (PROCESS LOGIC) ---
 def process_command(user_text):
     st.session_state.messages.append({"role": "user", "content": user_text})
     
@@ -111,15 +94,15 @@ def process_command(user_text):
                 response = client.models.generate_content(model="gemini-2.5-flash-lite", contents=user_text)
                 reply = response.text
                 
-            st.session_state.messages.append({"role": "assistant", "content": reply, "speak": True})
+            st.session_state.messages.append({"role": "assistant", "content": reply})
             st.rerun()
             
         except Exception as e:
             error_msg = f"System Error: Logic failed. ({e})"
-            st.session_state.messages.append({"role": "assistant", "content": error_msg, "speak": True})
+            st.session_state.messages.append({"role": "assistant", "content": error_msg})
             st.rerun()
 
-# --- 10. DUAL INPUT: KEYBOARD OR VOICE ---
+# --- 9. DUAL INPUT: KEYBOARD OR VOICE ---
 st.caption("🗣️ Speak to Nexus or type below:")
 col1, col2 = st.columns([1, 5])
 
@@ -135,14 +118,15 @@ with col2:
 if audio_value:
     with st.spinner("Translating audio..."):
         r = sr.Recognizer()
-        with sr.AudioFile(audio_value) as source:
-            audio_data = r.record(source)
-            try:
+        try:
+            with sr.AudioFile(audio_value) as source:
+                audio_data = r.record(source)
                 transcribed_text = r.recognize_google(audio_data)
-                # Clear the audio widget by resetting it (optional, but good UX)
                 process_command(transcribed_text)
-            except sr.UnknownValueError:
-                st.error("Could not understand audio. Please try again.")
+        except sr.UnknownValueError:
+            st.error("❌ Audio was clear, but no speech was detected. Please try speaking closer to the mic.")
+        except Exception as e:
+            st.error(f"❌ Microphone/Processing Error: {e}")
 
 # Process Keyboard Input
 if text_prompt:
