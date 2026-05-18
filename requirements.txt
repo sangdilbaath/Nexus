@@ -1,5 +1,6 @@
 streamlit
-pandas
 google-genai
-SpeechRecognition
+pandas
+matplotlib
 openpyxl
+streamlit-mic-recorder
