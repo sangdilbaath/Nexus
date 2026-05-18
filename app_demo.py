@@ -5,7 +5,6 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import io
-import os
 import time
 from streamlit_mic_recorder import speech_to_text
 
@@ -141,15 +140,6 @@ hr { border-color: var(--border) !important; }
     font-family: var(--font-mono) !important; font-weight: 700 !important;
 }
 
-/* ── Login page ── */
-.login-card {
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: 16px; padding: 2.5rem; text-align: center;
-    box-shadow: 0 8px 40px #00000060; max-width: 400px; margin: 0 auto;
-}
-.login-logo { font-family: var(--font-mono); font-size: 2.5rem; color: var(--accent); letter-spacing: 4px; }
-.login-sub { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 2rem; }
-
 /* ── Status widget ── */
 [data-testid="stStatusWidget"] { background: var(--bg-card) !important; border: 1px solid var(--border) !important; border-radius: 10px !important; }
 
@@ -163,42 +153,7 @@ hr { border-color: var(--border) !important; }
 """, unsafe_allow_html=True)
 
 # ============================================================
-# SECTION 3: PASSWORD AUTHENTICATION
-# ============================================================
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-
-if not st.session_state.logged_in:
-    st.markdown("<br><br><br>", unsafe_allow_html=True)
-    _, col, _ = st.columns([1, 1.5, 1])
-    with col:
-        st.markdown("""
-            <div class="login-card">
-                <div class="login-logo">NEXUS</div>
-                <div class="login-sub">Enterprise Data Intelligence Platform</div>
-            </div>
-        """, unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # NOTE: Move password to env var — never hardcode in source
-        user_pwd = st.text_input("Master Password", type="password", placeholder="Enter your password...")
-        
-        if st.button("Authenticate →", use_container_width=True):
-            correct_password = os.environ.get("NEXUS_PASSWORD", "samr3113")
-            if user_pwd == correct_password:
-                st.session_state.logged_in = True
-                st.toast("Authentication Successful ✅")
-                time.sleep(0.4)
-                st.rerun()
-            else:
-                st.error("❌ Access Denied — Incorrect Password")
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown('<p style="text-align:center; color: #8b949e; font-size:0.7rem;">Nexus v3.0 · 2026 Pro Edition</p>', unsafe_allow_html=True)
-    st.stop()
-
-# ============================================================
-# SECTION 4: SESSION STATE INITIALIZATION
+# SECTION 3: SESSION STATE INITIALIZATION
 # ============================================================
 for key, default in {
     "query_text": "",
