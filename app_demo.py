@@ -53,7 +53,7 @@ html, body, [data-testid="stAppViewContainer"] {
 [data-testid="stSidebar"] { background-color: var(--bg-secondary) !important; border-right: 1px solid var(--border); }
 [data-testid="stSidebar"] * { color: var(--text-primary) !important; }
 .block-container { padding: 2rem 2.5rem 2rem 2.5rem !important; max-width: 1400px; }
-#MainMenu, footer, header { visibility: hidden; }
+#MainMenu, footer,{ visibility: hidden; }
 
 /* ── Title / Hero ── */
 .hero-zone {
