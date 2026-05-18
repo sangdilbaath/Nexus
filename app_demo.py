@@ -5,44 +5,9 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import io
-import uuid
 import os
 import time
 from streamlit_mic_recorder import speech_to_text
-
-# ============================================================
-# SECTION 1: HARDWARE ACTIVATION
-# ============================================================
-def get_current_machine_id():
-    return hex(uuid.getnode())
-
-def is_activated():
-    current_id = get_current_machine_id()
-    # NOTE: Move this to an env variable or config file — never hardcode IDs in source
-    master_id = os.environ.get("NEXUS_MASTER_ID", "0x58cdc9382aec")
-    if current_id == master_id:
-        return True
-    license_path = "license.nexus"
-    if os.path.exists(license_path):
-        with open(license_path, "r") as f:
-            stored_id = f.read().strip()
-            return current_id == stored_id
-    return False
-
-# Security Gate
-if not is_activated():
-    st.set_page_config(page_title="Nexus Activation", page_icon="🔐")
-    st.markdown("""
-        <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-        body, [data-testid="stAppViewContainer"] { background: #0a0a0f; color: #e0e0e0; font-family: 'JetBrains Mono', monospace; }
-        .block-container { padding-top: 4rem; }
-        </style>
-    """, unsafe_allow_html=True)
-    st.error("🚫 NEXUS AI — PRODUCT NOT ACTIVATED")
-    st.code(f"Machine ID: {get_current_machine_id()}", language="bash")
-    st.caption("Contact your administrator with the Machine ID above.")
-    st.stop()
 
 # ============================================================
 # SECTION 2: PAGE CONFIG & GLOBAL CSS
@@ -277,11 +242,9 @@ with st.sidebar:
                 st.markdown(f'<div class="audit-item">#{len(st.session_state.command_history)-i+1} {cmd}</div>', unsafe_allow_html=True)
 
     st.divider()
-    machine_id = get_current_machine_id()
-    st.markdown(f"""
-        <div style="background:#1c2333; border:1px solid #30363d; border-radius:8px; padding:0.7rem 1rem;">
-            <div style="font-size:0.65rem; color:#8b949e; text-transform:uppercase; letter-spacing:1px;">Licensed Device</div>
-            <div style="font-family:'Space Mono',monospace; font-size:0.7rem; color:#00d4aa; margin-top:0.2rem;">{machine_id[:18]}...</div>
+    st.markdown("""
+        <div style="background:#1c2333; border:1px solid #30363d; border-radius:8px; padding:0.7rem 1rem; text-align:center;">
+            <div style="font-size:0.65rem; color:#8b949e; text-transform:uppercase; letter-spacing:1px;">Nexus v3.0 · 2026 Pro Edition</div>
         </div>
     """, unsafe_allow_html=True)
 
